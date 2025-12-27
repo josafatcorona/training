@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DevHealth OS | Programador Atleta</title>
+    <style>
+        :root {
+            --bg: #0b0e14;
+            --card: #151921;
+            --accent: #79c0ff;
+            --text: #adbac7;
+            --success: #57ab5a;
+            --border: #444c56;
+        }
+        body {
+            font-family: 'Fira Code', monospace;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0; padding: 15px;
+        }
+        .container { max-width: 700px; margin: auto; }
+        .tabs { display: flex; gap: 5px; margin-bottom: 15px; }
+        .tab-btn {
+            flex: 1; padding: 12px; background: var(--card);
+            border: 1px solid var(--border); color: var(--text);
+            cursor: pointer; border-radius: 5px;
+        }
+        .tab-btn.active { border-color: var(--accent); color: var(--accent); background: #1c212b; }
+        .card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 8px; padding: 18px; margin-bottom: 15px;
+        }
+        h2 { color: var(--accent); font-size: 1.1rem; margin-top: 0; display: flex; align-items: center; gap: 10px; }
+        .macro-box {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 10px;
+        }
+        .macro-item { background: #22272e; padding: 8px; border-radius: 5px; text-align: center; border: 1px solid var(--border); }
+        .macro-val { display: block; font-weight: bold; color: white; }
+        .macro-lab { font-size: 0.65rem; color: #768390; }
+        .check-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid #22272e; }
+        input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--success); cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border); }
+        th { color: var(--accent); }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header style="text-align:center; padding: 20px 0;">
+        <h1 style="color: white; margin:0;">SYSTEM.HEALTH.INIT()</h1>
+        <p style="font-size: 0.8rem;">Déficit Calórico: 2250 kcal | Alcohol: 0%</p>
+    </header>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="openTab('dash')">DASHBOARD</button>
+        <button class="tab-btn" onclick="openTab('kitchen')">COOKBOOK</button>
+    </div>
+
+    <div id="dash" class="content">
+        <div class="card">
+            <h2>📊 Objetivos Diarios</h2>
+            <div class="macro-box">
+                <div class="macro-item"><span class="macro-val">2250</span><span class="macro-lab">KCAL</span></div>
+                <div class="macro-item"><span class="macro-val">180g</span><span class="macro-lab">PROT</span></div>
+                <div class="macro-item"><span class="macro-val">225g</span><span class="macro-lab">CARB</span></div>
+                <div class="macro-item"><span class="macro-val">70g</span><span class="macro-lab">GRASA</span></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🏋️ <span id="day-title">Rutina</span></h2>
+            <div id="exercises"></div>
+        </div>
+
+        <div class="card">
+            <h2>✅ Checklist Diario</h2>
+            <div id="checklist-container">
+                </div>
+        </div>
+    </div>
+
+    <div id="kitchen" class="content hidden">
+        <div class="card">
+            <h2>🍴 Matriz de Nutrición</h2>
+            <table>
+                <thead>
+                    <tr><th>Hora</th><th>Opción A</th><th>Opción B</th><th>Opción C</th></tr>
+                </thead>
+                <tbody id="menu-table"></tbody>
+            </table>
+        </div>
+        <div class="card">
+            <h2>💊 Suplementación</h2>
+            <p>• <strong>Creatina:</strong> 5g en el batido post-gym.</p>
+            <p>• <strong>Whey Protein:</strong> 1 scoop para completar proteína.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    const habits = [
+        "Abstinencia Alcohol (Día +1)",
+        "Entreno 05:30 AM (50 min)",
+        "Creatina 5g completada",
+        "Porción de Arroz incluida",
+        "3L de Agua ingeridos",
+        "Déficit Calórico respetado"
+    ];
+
+    const routines = {
+        1: { name: "Lunes: Empuje (Push)", exc: ["Press Banca 4x10", "Press Militar 3x12", "Copa Tríceps 3x12", "Elev. Laterales 3x15"] },
+        2: { name: "Martes: Tirón (Pull)", exc: ["Jalón Pecho 4x10", "Remo Mancuerna 3x12", "Curl Bíceps 3x12", "Facepulls 3x15"] },
+        3: { name: "Miércoles: Empuje (Push)", exc: ["Press Inclinado 4x10", "Vuelos Pecho 3x12", "Fondos 3x12", "Elev. Laterales 3x15"] },
+        4: { name: "Jueves: Tirón (Pull)", exc: ["Remo Polea 4x10", "Chin Ups 3xMax", "Martillos Bíceps 3x12", "Vuelos Posteriores 3x15"] },
+        5: { name: "Viernes: Pierna Full", exc: ["Sentadilla Goblet 4x10", "P. Muerto Rumano 4x12", "Desplantes 3x12", "Gemelos 4x20"] },
+        6: { name: "Sábado: Cardio", exc: ["Caminar 45 min", "Movilidad"] },
+        0: { name: "Domingo: Descanso", exc: ["Meal Prep", "Caminar 20 min"] }
+    };
+
+    const menu = [
+        {h:"05:00", a:"Plátano + Café", b:"Toast + Miel", c:"1/2 Manzana"},
+        {h:"07:30", a:"Whey + Avena + Creatina", b:"Huevos c/ Manchego", c:"Yogur + Avena"},
+        {h:"13:00", a:"Pollo + Arroz + Aguacate", b:"Res + Arroz + Verduras", c:"Tilapia + Arroz"},
+        {h:"17:00", a:"Quesadilla Manchego", b:"Manzana + Whey", c:"Tortilla c/ Aguacate"},
+        {h:"20:30", a:"Lentejas + Soya", b:"Atún + Ensalada", c:"Tacos de Tilapia"}
+    ];
+
+    function openTab(id) {
+        document.querySelectorAll('.content').forEach(c => c.classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+    }
+
+    function init() {
+        // Cargar Rutina
+        const day = new Date().getDay();
+        document.getElementById('day-title').innerText = routines[day].name;
+        document.getElementById('exercises').innerHTML = routines[day].exc.map(e => `<div class="check-item">🔹 ${e}</div>`).join('');
+
+        // Cargar Menú
+        document.getElementById('menu-table').innerHTML = menu.map(m => `<tr><td>${m.h}</td><td>${m.a}</td><td>${m.b}</td><td>${m.c}</td></tr>`).join('');
+
+        // Cargar Checklist con LocalStorage
+        const checklistContainer = document.getElementById('checklist-container');
+        habits.forEach((h, i) => {
+            const checked = localStorage.getItem(`habit-${i}`) === 'true' ? 'checked' : '';
+            checklistContainer.innerHTML += `
+                <div class="check-item">
+                    <input type="checkbox" id="h${i}" ${checked} onclick="saveHabit(${i}, this.checked)">
+                    <label for="h${i}">${h}</label>
+                </div>`;
+        });
+    }
+
+    function saveHabit(id, isChecked) {
+        localStorage.setItem(`habit-${id}`, isChecked);
+    }
+
+    init();
+</script>
+</body>
+</html>
