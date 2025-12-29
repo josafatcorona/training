@@ -44,24 +44,30 @@
         th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border); }
         th { color: var(--accent); }
         .hidden { display: none; }
+        .menu-actions { display: flex; gap: 8px; margin-bottom: 10px; }
+        .btn {
+            padding: 8px 10px; background: #1c212b; color: var(--text);
+            border: 1px solid var(--border); border-radius: 5px; cursor: pointer;
+        }
+        .btn:hover { border-color: var(--accent); color: var(--accent); }
     </style>
 </head>
 <body>
 
 <div class="container">
     <header style="text-align:center; padding: 20px 0;">
-        <h1 style="color: white; margin:0;">SYSTEM.HEALTH.INIT()</h1>
+        <h1 style="color: white; margin:0;">Control  de rutina diaria.</h1>
         <p style="font-size: 0.8rem;">Déficit Calórico: 2250 kcal | Alcohol: 0%</p>
     </header>
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="openTab('dash')">DASHBOARD</button>
-        <button class="tab-btn" onclick="openTab('kitchen')">COOKBOOK</button>
+        <button class="tab-btn active" onclick="openTab(event,'dash')">DASHBOARD</button>
+        <button class="tab-btn" onclick="openTab(event,'kitchen')">COOKBOOK</button>
     </div>
 
     <div id="dash" class="content">
         <div class="card">
-            <h2>📊 Objetivos Diarios</h2>
+            <h2>📊 Objetivos diarios</h2>
             <div class="macro-box">
                 <div class="macro-item"><span class="macro-val">2250</span><span class="macro-lab">KCAL</span></div>
                 <div class="macro-item"><span class="macro-val">180g</span><span class="macro-lab">PROT</span></div>
@@ -76,15 +82,18 @@
         </div>
 
         <div class="card">
-            <h2>✅ Checklist Diario</h2>
-            <div id="checklist-container">
-                </div>
+            <h2>✅ Checklist diario</h2>
+            <div id="checklist-container"></div>
+            <button class="btn" onclick="resetChecklist()">🔄 Resetear checklist</button>
         </div>
     </div>
 
     <div id="kitchen" class="content hidden">
         <div class="card">
-            <h2>🍴 Matriz de Nutrición</h2>
+            <h2>🍴 Matriz de nutrición</h2>
+            <div class="menu-actions">
+                <button class="btn" onclick="loadMenu()">🔁 Re-aleatorizar menú</button>
+            </div>
             <table>
                 <thead>
                     <tr><th>Hora</th><th>Opción A</th><th>Opción B</th><th>Opción C</th></tr>
@@ -101,51 +110,222 @@
 </div>
 
 <script>
+    // Hábitos con persistencia
     const habits = [
         "Abstinencia Alcohol (Día +1)",
-        "Entreno 05:30 AM (50 min)",
+        "Entreno 05:30 AM (70–90 min)",
         "Creatina 5g completada",
         "Porción de Arroz incluida",
         "3L de Agua ingeridos",
         "Déficit Calórico respetado"
     ];
+    function resetChecklist() {
+        habits.forEach((h, i) => {
+            localStorage.removeItem(`habit-${i}`);
+        });
+        init(); // recarga la interfaz con todo desmarcado
+    }
 
+    // Rutinas extendidas para 70–90 min (con volumen y accesorios)
     const routines = {
-        1: { name: "Lunes: Empuje (Push)", exc: ["Press Banca 4x10", "Press Militar 3x12", "Copa Tríceps 3x12", "Elev. Laterales 3x15"] },
-        2: { name: "Martes: Tirón (Pull)", exc: ["Jalón Pecho 4x10", "Remo Mancuerna 3x12", "Curl Bíceps 3x12", "Facepulls 3x15"] },
-        3: { name: "Miércoles: Empuje (Push)", exc: ["Press Inclinado 4x10", "Vuelos Pecho 3x12", "Fondos 3x12", "Elev. Laterales 3x15"] },
-        4: { name: "Jueves: Tirón (Pull)", exc: ["Remo Polea 4x10", "Chin Ups 3xMax", "Martillos Bíceps 3x12", "Vuelos Posteriores 3x15"] },
-        5: { name: "Viernes: Pierna Full", exc: ["Sentadilla Goblet 4x10", "P. Muerto Rumano 4x12", "Desplantes 3x12", "Gemelos 4x20"] },
-        6: { name: "Sábado: Cardio", exc: ["Caminar 45 min", "Movilidad"] },
-        0: { name: "Domingo: Descanso", exc: ["Meal Prep", "Caminar 20 min"] }
+        1: { 
+            name: "Lunes: Empuje (Push)", 
+            exc: [
+                "Press Banca 4x8–10 (RPE 8)",
+                "Press Inclinado Mancuernas 4x10–12",
+                "Press Militar Barra 4x6–8",
+                "Fondos en paralelas 3x10–12",
+                "Copa Tríceps 3x12–15",
+                "Elevaciones Laterales 4x15–20",
+                "Pájaros (deltoide post.) 3x15",
+                "Flexiones 3xAMRAP",
+                "Core: Plancha 3x45s"
+            ]
+        },
+        2: { 
+            name: "Martes: Tirón (Pull)", 
+            exc: [
+                "Dominadas/Chin Ups 4xAMRAP",
+                "Jalón al pecho 4x10–12",
+                "Remo con barra 4x6–8",
+                "Remo mancuerna 3x10–12 por lado",
+                "Facepulls 4x15–20",
+                "Curl barra 3x10–12",
+                "Curl martillo 3x12–15",
+                "Trapecio: Encogimientos 4x12",
+                "Core: Hollow hold 3x30–40s"
+            ]
+        },
+        3: { 
+            name: "Miércoles: Empuje (Push)", 
+            exc: [
+                "Press Banca Inclinado 4x8–10",
+                "Press con mancuernas 4x10–12",
+                "Fondos (lastrados si posible) 3x8–10",
+                "Tríceps en polea 4x12–15",
+                "Elevaciones frontales 3x12–15",
+                "Laterales en drop set x2",
+                "Pec deck / vuelos 3x12–15",
+                "Flexiones diamante 3xAMRAP",
+                "Core: Rueda abdominal 3x10"
+            ]
+        },
+        4: { 
+            name: "Jueves: Tirón (Pull)", 
+            exc: [
+                "Remo en polea baja 4x8–10",
+                "Peso muerto rumano 4x8–10",
+                "Jalón neutro 4x10–12",
+                "Remo T-bar 3x8–10",
+                "Posteriores (reverse fly) 4x15–20",
+                "Curl inclinado 3x10–12",
+                "Curl concentrado 3x12–15",
+                "Antebrazo: extensiones 3x15",
+                "Core: Side plank 3x30s por lado"
+            ]
+        },
+        5: { 
+            name: "Viernes: Pierna Full", 
+            exc: [
+                "Sentadilla (goblet o barra) 5x6–10",
+                "Prensa 4x10–12",
+                "Peso muerto rumano 4x8–10",
+                "Desplantes caminando 3x12 por lado",
+                "Extensiones de cuádriceps 3x12–15",
+                "Curl femoral 3x12–15",
+                "Elevación de gemelos 5x15–20",
+                "Glúteo: hip thrust 4x8–12",
+                "Core: Farmer walk 3x40m"
+            ]
+        },
+        6: { 
+            name: "Sábado: Cardio + movilidad", 
+            exc: [
+                "Caminar rápido / trote 45–60 min",
+                "Interválico ligero 10–15 min (opc.)",
+                "Movilidad: caderas, hombros 20 min",
+                "Estiramientos 10 min",
+                "Respiración diafragmática 5 min"
+            ]
+        },
+        0: { 
+            name: "Domingo: Descanso activo", 
+            exc: [
+                "Meal prep 60–90 min",
+                "Caminar 20–30 min",
+                "Movilidad suave 10–15 min"
+            ]
+        }
     };
 
-    const menu = [
-        {h:"05:00", a:"Plátano + Café", b:"Toast + Miel", c:"1/2 Manzana"},
-        {h:"07:30", a:"Whey + Avena + Creatina", b:"Huevos c/ Manchego", c:"Yogur + Avena"},
-        {h:"13:00", a:"Pollo + Arroz + Aguacate", b:"Res + Arroz + Verduras", c:"Tilapia + Arroz"},
-        {h:"17:00", a:"Quesadilla Manchego", b:"Manzana + Whey", c:"Tortilla c/ Aguacate"},
-        {h:"20:30", a:"Lentejas + Soya", b:"Atún + Ensalada", c:"Tacos de Tilapia"}
-    ];
+    // Menú: muchas recetas por hora, se muestran 3 aleatorias
+    const menu = {
+        "05:00": [
+            "Plátano + Café",
+            "Toast integral + Miel",
+            "1/2 Manzana",
+            "Smoothie verde (espinaca, manzana)",
+            "Pan integral + Aguacate",
+            "Yogur griego natural",
+            "Kéfir + frutos rojos",
+            "Té verde + dátiles",
+            "Protein coffee (café + whey)",
+            "Nueces + espresso"
+        ],
+        "07:30": [
+            "Whey + Avena + Creatina",
+            "Huevos c/ Manchego",
+            "Yogur + Avena",
+            "Hotcakes de avena",
+            "Omelette de claras + espinaca",
+            "Molletes integrales ligeros",
+            "Pan pita + hummus + jitomate",
+            "Queso cottage + fruta",
+            "Chilaquiles light (horno) + pollo",
+            "Avena overnight + chía"
+        ],
+        "13:00": [
+            "Pollo + Arroz + Aguacate",
+            "Res + Arroz + Verduras",
+            "Tilapia + Arroz",
+            "Ensalada de garbanzos + pepino",
+            "Salmón + Quinoa + espárragos",
+            "Pechuga grill + papa cocida",
+            "Tacos de arrachera (maíz) + pico",
+            "Bowl de atún + arroz + edamame",
+            "Lomo de cerdo + camote",
+            "Fajitas de pollo + pimientos"
+        ],
+        "17:00": [
+            "Quesadilla Manchego (maíz)",
+            "Manzana + Whey",
+            "Tortilla c/ Aguacate",
+            "Batido de plátano + cacahuate",
+            "Sándwich integral + pavo",
+            "Galletas de arroz + cottage",
+            "Hummus + zanahoria",
+            "Trail mix (controlado)",
+            "Yogur griego + miel",
+            "Gelatina proteica"
+        ],
+        "20:30": [
+            "Lentejas + Soya",
+            "Atún + Ensalada",
+            "Tacos de Tilapia",
+            "Sopa de verduras + tofu",
+            "Pechuga + Espinaca salteada",
+            "Caldo de pollo (light) + verduras",
+            "Ensalada César light (pollo)",
+            "Tostadas de tinga (maíz, light)",
+            "Revuelto de claras + champiñón",
+            "Pavo + brócoli al vapor"
+        ]
+    };
 
-    function openTab(id) {
+    function openTab(evt, id) {
         document.querySelectorAll('.content').forEach(c => c.classList.add('hidden'));
         document.getElementById(id).classList.remove('hidden');
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        event.currentTarget.classList.add('active');
+        evt.currentTarget.classList.add('active');
+    }
+
+    // Sample aleatorio sin sesgo de sort()
+    function sampleArray(arr, k = 3) {
+        const copy = arr.slice();
+        for (let i = copy.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [copy[i], copy[j]] = [copy[j], copy[i]];
+        }
+        return copy.slice(0, k);
+    }
+
+    function loadMenu() {
+        const table = document.getElementById('menu-table');
+        table.innerHTML = "";
+        for (const hora in menu) {
+            const opciones = sampleArray(menu[hora], 3);
+            table.innerHTML += `<tr>
+                <td>${hora}</td>
+                <td>${opciones[0]}</td>
+                <td>${opciones[1]}</td>
+                <td>${opciones[2]}</td>
+            </tr>`;
+        }
     }
 
     function init() {
-        // Cargar Rutina
-        const day = new Date().getDay();
+        // Cargar Rutina del día
+        const day = new Date().getDay(); // 0 = Domingo, 1 = Lunes ...
         document.getElementById('day-title').innerText = routines[day].name;
-        document.getElementById('exercises').innerHTML = routines[day].exc.map(e => `<div class="check-item">🔹 ${e}</div>`).join('');
+        document.getElementById('exercises').innerHTML = routines[day].exc
+            .map(e => `<div class="check-item">🔹 ${e}</div>`).join('');
 
-        // Cargar Menú
-        document.getElementById('menu-table').innerHTML = menu.map(m => `<tr><td>${m.h}</td><td>${m.a}</td><td>${m.b}</td><td>${m.c}</td></tr>`).join('');
+        // Cargar Menú aleatorio
+        loadMenu();
 
         // Cargar Checklist con LocalStorage
         const checklistContainer = document.getElementById('checklist-container');
+        checklistContainer.innerHTML = "";
         habits.forEach((h, i) => {
             const checked = localStorage.getItem(`habit-${i}`) === 'true' ? 'checked' : '';
             checklistContainer.innerHTML += `
